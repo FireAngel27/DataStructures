@@ -1,165 +1,223 @@
 package list;
 
-import java.util.Iterator;
-import java.util.function.Consumer;
+/******************************************************************************
+ * Class of ArrayList (resizable-array).
+ * Implements IList interface.
+ *
+ * @author  Peter SKUHRA
+ * @version 1.0 — 2020-10-05
+ */
+public class ArrayList<E> extends AList<E> implements IList<E> {
 
-public class ArrayList<T> implements IList<T> {
 
+    //*************************************************************************
+    //== CONSTANT CLASS ATTRIBUTES ============================================
+    //*************************************************************************
+
+    /**
+     * Default capacity of ArrayList after initialization.
+     */
     private static final int DEFAULT_CAPACITY = 10;
 
-    private final int EXPAND_COEFFICIENT = 2;
+    /**
+     * Expand coefficient for capacity changes.
+     */
+    private static final int EXPAND_COEFFICIENT = 2;
 
-    private int size_;
 
-    private T[] array_;
+    //*************************************************************************
+    //== VARIABLE INSTANCE ATTRIBUTES =========================================
+    //*************************************************************************
+
+    /**
+     * Size of ArrayList.
+     */
+    private int size;
+
+    /**
+     * Array buffer with items.
+     */
+    private Object[] array;
 
 
+    //*************************************************************************
+    //== CONSTRUCTORS AND FACTORY METHODS =====================================
+    //*************************************************************************
+
+    /**
+     * Default constructor.
+     * Initializes ArrayList with default capacity - 10.
+     */
     public ArrayList() {
         this(DEFAULT_CAPACITY);
     }
 
+    /**
+     * Constructor.
+     * Initializes ArrayList with defined capacity.
+     *
+     * @param capacity  initial capacity of ArrayList
+     */
     public ArrayList(int capacity) {
-        size_ = 0;
-        array_ = (T[]) new Object[capacity];
+        this.size = 0;
+        this.array = (E[]) new Object[capacity];
     }
 
+
+    //*************************************************************************
+    //== PUBLIC INSTANCE METHODS ==============================================
+    //*************************************************************************
+
+    /**
+     * Inserts an item into the ArrayList.
+     *
+     * @param item  item to inserted into the ArrayList
+     * @return      true after insertion
+     */
     @Override
-    public boolean add(T item) {
-        ensureCapacity(size_ + 1);
-        array_[++size_] = item;
+    public boolean add(E item) {
+        this.ensureCapacity(this.size + 1);
+        this.array[++this.size] = item;
 
         return true;
     }
 
+    /**
+     * Inserts an item into the ArrayList at the specified position.
+     *
+     * @param index     specified position
+     * @param item      item to inserted into the ArrayList
+     */
     @Override
-    public boolean add(int index, T item) {
-        ensureCapacity(size_ + 1);
-        checkRange(index);
+    public void add(int index, E item) {
+        this.checkRangeForAdd(index);
+        this.ensureCapacity(this.size + 1);
 
         System.arraycopy(
-                array_,
+                this.array,
                 index,
-                array_,
+                this.array,
                 index + 1,
-                size_ - index);
-        array_[index] = item;
-        ++size_;
+                this.size - index);
 
-        return true;
+        this.array[index] = item;
+        ++this.size;
     }
 
+    /**
+     * Returns an item at the specified position.
+     *
+     * @param index specified position of item
+     * @return      item at the specified position
+     */
     @Override
-    public void clear() {
-        size_ = 0;
+    public E get(int index) {
+        this.checkRange(index);
+        return (E) this.array[index];
     }
 
+    /**
+     * Sets an item at the specified position in ArrayList with the specified item.
+     *
+     * @param index specified position with item to be replace
+     * @param item  specified item
+     * @return      a replaced item
+     */
     @Override
-    public T get(int index) {
-        checkRange(index);
-        return array_[index];
-    }
+    public E set(int index, E item) {
+        this.checkRange(index);
 
-    @Override
-    public T set(int index, T item) {
-        checkRange(index);
+        E oldItem = (E) this.array[index];
 
-        T oldItem = array_[index];
-
-        array_[index] = item;
+        this.array[index] = item;
         return oldItem;
     }
 
+    /**
+     * Removes an item at the specified position in ArrayList.
+     *
+     * @param index specified position of the item to be remove
+     * @return      removed item
+     */
     @Override
-    public T remove(int index) {
-        checkRange(index);
-        T oldItem = array_[index];
+    public E remove(int index) {
+        this.checkRange(index);
+        E oldItem = (E) this.array[index];
 
         System.arraycopy(
-                array_,
+                this.array,
                 index + 1,
-                array_,
+                this.array,
                 index,
-                size_ - index - 1);
-        --size_;
+                this.size - index - 1);
 
+        --this.size;
         return oldItem;
     }
 
-    @Override
-    public boolean remove(T item) {
-        for (int i = 0; i < size_; ++i) {
-            if (item.equals(array_[i])) {
-                remove(i);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean contains(T item) {
-        return indexOf(item) >= 0;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return size_ == 0;
-    }
-
+    /**
+     * Returns the number of elements in ArrayList.
+     *
+     * @return the number of elements in ArrayList
+     */
     @Override
     public int size() {
-        return size_;
+        return this.size;
     }
 
+    /**
+     * // TODO
+     *
+     * @param fromIndex
+     * @param toIndex
+     * @return
+     */
     @Override
-    public int indexOf(T item) {
-        for (int i = 0; i < size_; ++i) {
-            if (item.equals(array_[i])) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    @Override
-    public Iterator<T> iterator() {
+    public IList<E> subList(int fromIndex, int toIndex) {
+        // TODO
         return null;
-        // TODO
     }
 
-    @Override
-    public void forEach(Consumer<? super T> consumer) {
-        // TODO
-    }
-
+    /**
+     * Ensures (increase) capacity of ArrayList.
+     *
+     * @param capacity  the desired minimum capacity
+     */
     public void ensureCapacity(int capacity) {
-        if (capacity <= array_.length) {
+        if (capacity <= this.array.length) {
             return;
         }
 
-        changeCapacity(Math.max(array_.length * EXPAND_COEFFICIENT, capacity));
+        this.changeCapacity(
+                Math.max(this.array.length * EXPAND_COEFFICIENT, capacity)
+        );
     }
 
-    public void shrinkToFit() {
-        if (size_ == array_.length) {
+    /**
+     * Trims the capacity of the ArrayList to the current size.
+     */
+    public void trimToSize() {
+        if (this.size == this.array.length) {
             return;
         }
 
-        changeCapacity(size_);
+        this.changeCapacity(this.size);
     }
 
-    private void checkRange(int index) {
-        if ((index < 0) || (index >= size_)) {
-            throw new IndexOutOfBoundsException("Index out of range!");
-        }
-    }
 
+    //*************************************************************************
+    //== PRIVATE AND AUXILIARY INSTANCE METHODS ===============================
+    //*************************************************************************
+
+    /**
+     * Changes capacity of ArrayList to the defined capacity.
+     *
+     * @param capacity  the desired capacity
+     */
     private void changeCapacity(int capacity) {
-        T[] newArray = (T[]) new Object[capacity];
+        Object[] newArray = new Object[capacity];
 
-        System.arraycopy(array_, 0, newArray, 0, size_);
-        array_ = newArray;
+        System.arraycopy(this.array, 0, newArray, 0, this.size);
+        this.array = newArray;
     }
 }
